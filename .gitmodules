@@ -1,0 +1,6 @@
+[submodule "clown68000"]
+	path = clown68000
+	url = https://github.com/Clownacy/clown68000
+[submodule "m68000"]
+	path = m68000
+	url = https://github.com/SingleStepTests/m68000
