@@ -4,6 +4,10 @@ project(validator LANGUAGES CXX)
 
 add_executable(validator "main.cpp")
 
+add_subdirectory(clown68000 EXCLUDE_FROM_ALL)
+
+target_link_libraries(validator PRIVATE clown68000-interpreter)
+
 enable_testing()
 
 function(make_test name)

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <string_view>
 
-#include "clown68000/interpreter/unity.c"
+#include "clown68000/interpreter/clown68000.h"
 #include "json.hpp"
 
 namespace M68000
@@ -55,7 +55,6 @@ namespace M68000
 		m68000_state.program_counter = json["pc"].get<cc_u16f>() - 4;
 		m68000_state.instruction_register = 0;
 		m68000_state.halted = m68000_state.stopped = cc_false;
-		m68000_state.cycles_left_in_instruction = 0;
 		return m68000_state;
 	}
 
@@ -173,6 +172,7 @@ namespace M68000
 		const auto &initial_ram = initial_state["ram"];
 		const auto &final_state = test["final"];
 		const auto &final_ram = final_state["ram"];
+		const auto expected_duration = test["length"].get<cc_u16f>();
 
 		// Initialise the CPU.
 		Clown68000_State m68000_state = StateFromJSON(initial_state);
@@ -184,12 +184,18 @@ namespace M68000
 			ram[value[0].get<cc_u32f>()] = value[1].get<cc_u16f>();
 
 		// Run the instruction.
-		Clown68000_DoCycle(&m68000_state, &callbacks);
+		const auto actual_duration = Clown68000_DoCycle(&m68000_state, &callbacks);
 
 		// For now, we don't care about differences when exceptions occur
 		// (the values of registers seems to vary based on microcode, which is very annoying).
 		if (Group0Exception(m68000_state) || Group1Or2Exception(m68000_state))
 			return true;
+
+		if (actual_duration != expected_duration)
+		{
+			std::cerr << "Duration differs (should be " << expected_duration << " but was " << actual_duration <<  ").\n";
+			return false;
+		}
 
 		Clown68000_State final_m68000_state = StateFromJSON(final_state);
 
