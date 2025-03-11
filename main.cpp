@@ -102,7 +102,7 @@ namespace M68000
 
 	constexpr auto ReadWord = [](unsigned long address) constexpr
 	{
-		address &= 0xFFFF;
+		address &= 0xFFFFFF;
 		cc_u32f result = 0;
 		result |= static_cast<unsigned long>(ram[address + 0]) << 8 * 1;
 		result |= static_cast<unsigned long>(ram[address + 1]) << 8 * 0;
@@ -111,7 +111,7 @@ namespace M68000
 
 	constexpr auto ReadLongword = [](unsigned long address) constexpr
 	{
-		address &= 0xFFFF;
+		address &= 0xFFFFFF;
 		cc_u32f result = 0;
 		result |= static_cast<unsigned long>(ram[address + 0]) << 8 * 3;
 		result |= static_cast<unsigned long>(ram[address + 1]) << 8 * 2;
@@ -122,9 +122,10 @@ namespace M68000
 
 	static bool Group0Exception(const Clown68000_State &m68000_state)
 	{
-		for (unsigned int i = 2; i < 4; ++i)
-			if (m68000_state.program_counter == ReadLongword(i * 4) && (ReadWord(m68000_state.address_registers[7]) & 0xFFEF) == 0xFFEE)
-				return true;
+		if ((ReadWord(m68000_state.address_registers[7]) & 0xFFEF) == ((m68000_state.instruction_register & 0xFFE0) | 0xE))
+			for (unsigned int i = 2; i < 4; ++i)
+				if (m68000_state.program_counter == ReadLongword(i * 4))
+					return true;
 
 		return false;
 	}
