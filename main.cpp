@@ -55,6 +55,7 @@ namespace M68000
 		m68000_state.program_counter = json["pc"].get<cc_u16f>() - 4;
 		m68000_state.instruction_register = 0;
 		m68000_state.halted = m68000_state.stopped = cc_false;
+		m68000_state.pending_interrupt = cc_false;
 		return m68000_state;
 	}
 
