@@ -99,8 +99,18 @@ namespace M68000
 		return success;
 	}
 
-	constexpr auto ReadLongword = [](const unsigned long address) constexpr
+	constexpr auto ReadWord = [](unsigned long address) constexpr
 	{
+		address &= 0xFFFF;
+		cc_u32f result = 0;
+		result |= static_cast<unsigned long>(ram[address + 0]) << 8 * 1;
+		result |= static_cast<unsigned long>(ram[address + 1]) << 8 * 0;
+		return result;
+	};
+
+	constexpr auto ReadLongword = [](unsigned long address) constexpr
+	{
+		address &= 0xFFFF;
 		cc_u32f result = 0;
 		result |= static_cast<unsigned long>(ram[address + 0]) << 8 * 3;
 		result |= static_cast<unsigned long>(ram[address + 1]) << 8 * 2;
@@ -112,7 +122,7 @@ namespace M68000
 	static bool Group0Exception(const Clown68000_State &m68000_state)
 	{
 		for (unsigned int i = 2; i < 4; ++i)
-			if (m68000_state.program_counter == ReadLongword(i * 4))
+			if (m68000_state.program_counter == ReadLongword(i * 4) && (ReadWord(m68000_state.address_registers[7]) & 0xFFEF) == 0xFFEE)
 				return true;
 
 		return false;
@@ -149,12 +159,12 @@ namespace M68000
 				address == m68000_state.address_registers[7] + 12 ||
 				address == m68000_state.address_registers[7] + 13))
 				continue;
-			else if (group_1_or_2_exception && (
-				address == m68000_state.address_registers[7] + 2 ||
-				address == m68000_state.address_registers[7] + 3 ||
-				address == m68000_state.address_registers[7] + 4 ||
-				address == m68000_state.address_registers[7] + 5))
-				continue;
+//			else if (group_1_or_2_exception && (
+//				address == m68000_state.address_registers[7] + 2 ||
+//				address == m68000_state.address_registers[7] + 3 ||
+//				address == m68000_state.address_registers[7] + 4 ||
+//				address == m68000_state.address_registers[7] + 5))
+//				continue;
 
 			if (obtained_value != expected_value)
 			{
@@ -188,7 +198,7 @@ namespace M68000
 
 		// For now, we don't care about differences when exceptions occur
 		// (the values of registers seems to vary based on microcode, which is very annoying).
-		if (Group0Exception(m68000_state) || Group1Or2Exception(m68000_state))
+		if (Group0Exception(m68000_state) /*|| Group1Or2Exception(m68000_state)*/)
 			return true;
 
 		if (actual_duration != expected_duration)
